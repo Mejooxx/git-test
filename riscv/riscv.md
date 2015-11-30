@@ -33,14 +33,29 @@
 
 ![conditional_branches][3]
 
-Branch instructions compare two registers. BEQ and BNE take the branch if registers rs1 and rs2
-are equal or unequal respectively. BLT and BLTU take the branch if rs1 is less than rs2, using
-signed and unsigned comparison respectively. BGE and BGEU take the branch if rs1 is greater
-than or equal to rs2, using signed and unsigned comparison respectively. Note, BGT, BGTU,
-BLE, and BLEU can be synthesized by reversing the operands to BLT, BLTU, BGE, and BGEU,
-respectively.
++ 分支指令比较两个寄存器，BEQ 指令和 BNE 指令分别在寄存器 rs1 和 rs2 相当和不想等的时候进行分支，BLT 指令和 BLTU 指令分别对寄存器 rs1 和 rs2 进行有符号和无符号的比较，在 rs1 小于 rs2的时候进行分支。需要注意的是，BGT 指令，BGTU 指令，BLE 指令和 BLEU 指令分别可以通过颠倒 BLT 指令，BLTU 指令，BGE 指令和 BGEU 指令的操作数来实现。
 
-+ 分支指令比较两个寄存器，BEQ 指令和 BNE 指令分别在寄存器 rs1 和 rs2 相当和不想等的时候进行分支，BLT 指令和 BLTU 指令分别对寄存器 rs1 和 rs2 进行有符号和无符号的比较，在 rs1 小于 rs2的时候进行分支。需要注意的是，BGT 指令，BGTU 指令，BLE 指令和 BLEU 指令分别可以通过颠倒 BLT指令，BLTU 指令，BGE 指令和 BGEU 指令的操作数来实现。
++ 软件应该被优化成大多数情况下是顺序执行代码，加上很少发生的分支跳转的代码序列。软件也应该至少在第一次遇到分支时假设向后的分支预测将会发生而向前的分支预测不发生。动态分支预测应该很快地获知任何可预测的分支行为。
+
++ 不同于其他的一些体系结构，RISC-V 的 jump指令（rd = x0 的 JAL 指令）作为一个无条件跳转指令而不是一个条件总是为真的条件分支指令。RISC-V 的 jump 指令也是 pc 相对寻址的，并且支持比 branch 指令更宽的跳转范围，这样并不会给有条件分支的分支预测表造成影响。
+
+----------------------------------------------------------
+
+The conditional branches were designed to include arithmetic comparison operations between
+two registers (as also done in PA-RISC and Xtensa ISA), rather than use condition codes (x86,
+ARM, SPARC, PowerPC), or to only compare one register against zero (Alpha, MIPS), or
+two registers only for equality (MIPS). This design was motivated by the observation that a
+combined compare-and-branch instruction fits into a regular pipeline, avoids additional condition
+code state or use of a temporary register, and reduces static code size and dynamic instruction
+fetch traffic. Another point is that comparisons against zero require non-trivial circuit delay
+(especially after the move to static logic in advanced processes) and so are almost as expensive as
+arithmetic magnitude compares. Another advantage of a fused compare-and-branch instruction
+is that branches are observed earlier in the front-end instruction stream, and so can be predicted
+earlier. There is perhaps an advantage to a design with condition codes in the case where multiple
+branches can be taken based on the same condition codes, but we believe this case to be relatively
+rare.
+
+###### 
 
 [1]: /riscv/image/jal_format.png
 [2]: /riscv/image/jalr_format.png
