@@ -41,21 +41,25 @@
 
 ----------------------------------------------------------
 
-The conditional branches were designed to include arithmetic comparison operations between
-two registers (as also done in PA-RISC and Xtensa ISA), rather than use condition codes (x86,
-ARM, SPARC, PowerPC), or to only compare one register against zero (Alpha, MIPS), or
-two registers only for equality (MIPS). This design was motivated by the observation that a
-combined compare-and-branch instruction fits into a regular pipeline, avoids additional condition
-code state or use of a temporary register, and reduces static code size and dynamic instruction
-fetch traffic. Another point is that comparisons against zero require non-trivial circuit delay
-(especially after the move to static logic in advanced processes) and so are almost as expensive as
-arithmetic magnitude compares. Another advantage of a fused compare-and-branch instruction
-is that branches are observed earlier in the front-end instruction stream, and so can be predicted
-earlier. There is perhaps an advantage to a design with condition codes in the case where multiple
-branches can be taken based on the same condition codes, but we believe this case to be relatively
-rare.
+###### 条件分支的设计包括算术比较两个寄存器中的操作数（在 PA-RISC 和 Xtensa ISA 中也是这样），而不是用条件码（x86,ARM,SPARC,PowerPC），或者是只用一个寄存器和 0 进行比较（Alpha,MIPS），或者是只比较两个寄存器是否相等（MIPS）。这样设计的动机是一个比较和分支相结合的指令刚好适合于一个有规律的流水线，这样避免了附加的条件码状态和一个临时寄存器的使用，减少了静态代码的大小和动态取指令的通信量。另外的一点是，同 0 比较需要一个有价值的线路延迟（尤其是发展到高级处理的静态逻辑之后），这样就会像算法量级的比较一样昂贵。融合分支和比较指令的另外一个优势在于，在前端的指令流中分支可以较早地展现，所以就可以较早地区进行预测。也许，条件码设计的一个优势在某些情况下可以基于同样的条件码而发生多个分支，但我们相信，这种情况是相对罕见的。
 
-###### 
+###### 我们周详考虑过但是并没有顾及到在指令译码过程中的静态分支线索。这些可以减少动态预测的压力但是需要跟多的指令编码空间和对更好的结果的软件程序概要分析。如果实际的运行于概要分析的运行不匹配，就会导致更糟糕的性能。
+
+###### 我们周详考虑过但是并没有在指令中包含条件传送或者预测指令，它可以有效地取代不可预知的短分支。条件传送石两个里面比较简单的一个，但是用条件码就会比较困难，它可能会导致异常（内存访问和浮点操作）。预测指令需要在系统中增加额外的标记状态，增加指令去设置和清理这些标记，给每个指令增加额外的译码开销。条件传送和预测指令都要在无需的为体系结构中增加复杂性。需要添加一个隐式的第三源操作数，因为如果预测失败，我们就要把结构的目的寄存器的原始值复制到重命名的物理的目的寄存器。另外，静态的编译时间决定当输入不包括在Also, static compile-time decisions to use predication instead of branches can result in lower performance on inputs not included in the compiler training set, especially given that unpredictable branches are rare, and becoming rarer as branch prediction techniques improve.
+
+We note that various microarchitectural techniques exist to dynamically convert unpredictable
+short forward branches into internally predicated code to avoid the cost of flushing pipelines
+on a branch mispredict [7, 11, 10] and have been implemented in commercial processors [20].
+The simplest techniques just reduce the penalty of recovering from a mispredicted short forward
+branch by only flushing instructions in the branch shadow instead of the entire fetch pipeline,
+or by fetching instructions from both sides using wide instruction fetch or idle instruction fetch
+slots. More complex techniques for out-of-order cores add internal predicates on instructions in
+the branch shadow, with the internal predicate value written by the branch instruction, allowing
+the branch and following instructions to be executed speculatively and out-of-order with respect
+to other code [20].
+
+###### 我们注意到，各种微体系结构中都存在着动态地把短向前分支转换成内部的预测的代码，来避免吗当分支预测失败时清空流水线所带来的损耗，并且已经在商用处理器上得以实现。
+
 
 [1]: /riscv/image/jal_format.png
 [2]: /riscv/image/jalr_format.png
