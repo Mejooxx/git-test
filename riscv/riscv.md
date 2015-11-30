@@ -29,13 +29,18 @@
 
 #### 条件分支
 
-All branch instructions use the SB-type instruction format. The 12-bit B-immediate encodes signed
-offsets in multiples of 2, and is added to the current pc to give the target address. The conditional
-branch range is ±4 KiB.
-
 + 所有的分支指令都用 SB 格式进行编码。12 位的 B 格式的立即数以 2 的整数倍形式编码成有符号偏移量，加上当前的 pc 值作为分支目标地址。条件分支的范围是 ±4 KiB。
 
 ![conditional_branches][3]
+
+Branch instructions compare two registers. BEQ and BNE take the branch if registers rs1 and rs2
+are equal or unequal respectively. BLT and BLTU take the branch if rs1 is less than rs2, using
+signed and unsigned comparison respectively. BGE and BGEU take the branch if rs1 is greater
+than or equal to rs2, using signed and unsigned comparison respectively. Note, BGT, BGTU,
+BLE, and BLEU can be synthesized by reversing the operands to BLT, BLTU, BGE, and BGEU,
+respectively.
+
++ 分支指令比较两个寄存器，BEQ 指令和 BNE 指令分别在寄存器 rs1 和 rs2 相当和不想等的时候进行分支，BLT 指令和 BLTU 指令分别对寄存器 rs1 和 rs2 进行有符号和无符号的比较，在 rs1 小于 rs2的时候进行分支。需要注意的是，BGT 指令，BGTU 指令，BLE 指令和 BLEU 指令分别可以通过颠倒 BLT指令，BLTU 指令，BGE 指令和 BGEU 指令的操作数来实现。
 
 [1]: /riscv/image/jal_format.png
 [2]: /riscv/image/jalr_format.png
